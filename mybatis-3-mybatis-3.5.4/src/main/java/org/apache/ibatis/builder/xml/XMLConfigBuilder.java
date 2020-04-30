@@ -95,6 +95,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       throw new BuilderException("Each XMLConfigBuilder can only be used once.");
     }
     parsed = true;
+    // 解析配置文件
     parseConfiguration(parser.evalNode("/configuration"));
     return configuration;
   }
@@ -102,6 +103,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void parseConfiguration(XNode root) {
     try {
       //issue #117 read properties first
+      // 解析 properties 配置
       propertiesElement(root.evalNode("properties"));
       Properties settings = settingsAsProperties(root.evalNode("settings"));
       loadCustomVfs(settings);
@@ -220,15 +222,24 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   private void propertiesElement(XNode context) throws Exception {
     if (context != null) {
+      // 解析 properties 子节点，并将节点的内容转换成Properties
       Properties defaults = context.getChildrenAsProperties();
+
+      // 获取 properties 节点的 resource 和 url
       String resource = context.getStringAttribute("resource");
       String url = context.getStringAttribute("url");
+
+      // 两者都存在的情况下，抛出异常
       if (resource != null && url != null) {
         throw new BuilderException("The properties element cannot specify both a URL and a resource based property file reference.  Please specify one or the other.");
       }
+
+      // 通过resource 或者 url 获取的属性会覆盖子节点解析得到的属性
       if (resource != null) {
+        // 从文件系统加载并解析
         defaults.putAll(Resources.getResourceAsProperties(resource));
       } else if (url != null) {
+        // 从url地址加载并解析
         defaults.putAll(Resources.getUrlAsProperties(url));
       }
       Properties vars = configuration.getVariables();
@@ -236,6 +247,7 @@ public class XMLConfigBuilder extends BaseBuilder {
         defaults.putAll(vars);
       }
       parser.setVariables(defaults);
+      // 将解析后的属性set到 Configuration 中
       configuration.setVariables(defaults);
     }
   }
