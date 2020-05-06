@@ -307,11 +307,13 @@ public class XNode {
 
   public List<XNode> getChildren() {
     List<XNode> children = new ArrayList<>();
+    // 获取子节点列表
     NodeList nodeList = node.getChildNodes();
     if (nodeList != null) {
       for (int i = 0, n = nodeList.getLength(); i < n; i++) {
         Node node = nodeList.item(i);
         if (node.getNodeType() == Node.ELEMENT_NODE) {
+          // 将节点对象封装到 XNode 中，并将 XNode 对象放到 children 列表中。
           children.add(new XNode(xpathParser, node, variables));
         }
       }
@@ -321,7 +323,9 @@ public class XNode {
 
   public Properties getChildrenAsProperties() {
     Properties properties = new Properties();
+    // 遍历所有的子节点
     for (XNode child : getChildren()) {
+      // 获取 property 节点的 name 和 value 的值
       String name = child.getStringAttribute("name");
       String value = child.getStringAttribute("value");
       if (name != null && value != null) {

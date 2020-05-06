@@ -3,7 +3,14 @@
   PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
-  <properties resource="entrance/jdbc.properties"/>
+  <properties resource="entrance/jdbc.properties">
+    <property name="test1" value="1" />
+    <property name="test2" value="2" />
+
+    <!-- 注意这里的值会被resource中的值替换掉 -->
+    <property name="jdbc.username" value="test" />
+    <property name="jdbc.password" value="test" />
+  </properties>
 
 <!--  <typeAliases>-->
 <!--    <typeAlias alias="Article" type="xyz.coolblog.model.ArticleDO"/>-->
