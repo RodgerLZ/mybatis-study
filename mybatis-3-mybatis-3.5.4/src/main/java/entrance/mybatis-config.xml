@@ -3,6 +3,8 @@
   PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
+
+
   <properties resource="entrance/jdbc.properties">
     <property name="test1" value="1" />
     <property name="test2" value="2" />
@@ -11,6 +13,12 @@
     <property name="jdbc.username" value="test" />
     <property name="jdbc.password" value="test" />
   </properties>
+
+  <settings>
+    <setting name="cacheEnabled" value="true"/>
+    <setting name="lazyLoadingEnabled" value="true"/>
+    <setting name="autoMappingBehavior" value="PARTIAL"/>
+  </settings>
 
 <!--  <typeAliases>-->
 <!--    <typeAlias alias="Article" type="xyz.coolblog.model.ArticleDO"/>-->

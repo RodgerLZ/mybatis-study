@@ -40,6 +40,7 @@ public class MetaClass {
   }
 
   public static MetaClass forClass(Class<?> type, ReflectorFactory reflectorFactory) {
+    // 调用构造方法
     return new MetaClass(type, reflectorFactory);
   }
 
@@ -79,7 +80,10 @@ public class MetaClass {
   }
 
   public Class<?> getGetterType(String name) {
+    // 分词器，解析属性名
     PropertyTokenizer prop = new PropertyTokenizer(name);
+
+    // hasNext 表示 name 是一个符合属性，有'.'
     if (prop.hasNext()) {
       MetaClass metaProp = metaClassForProperty(prop);
       return metaProp.getGetterType(prop.getChildren());
@@ -132,7 +136,10 @@ public class MetaClass {
   }
 
   public boolean hasSetter(String name) {
+    // 分词器，解析属性名
     PropertyTokenizer prop = new PropertyTokenizer(name);
+
+    // hasNext 表示 name 是一个符合属性，有'.'
     if (prop.hasNext()) {
       if (reflector.hasSetter(prop.getName())) {
         MetaClass metaProp = metaClassForProperty(prop.getName());

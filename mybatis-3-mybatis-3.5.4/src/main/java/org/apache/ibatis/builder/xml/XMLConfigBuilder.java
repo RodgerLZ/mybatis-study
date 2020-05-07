@@ -114,6 +114,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       objectFactoryElement(root.evalNode("objectFactory"));
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
+
       settingsElement(settings);
       // read it after objectFactory and objectWrapperFactory issue #631
       environmentsElement(root.evalNode("environments"));
@@ -129,10 +130,15 @@ public class XMLConfigBuilder extends BaseBuilder {
     if (context == null) {
       return new Properties();
     }
+
+    // 获取 settings 中所有子节点的内容
     Properties props = context.getChildrenAsProperties();
+
     // Check that all settings are known to the configuration class
+    // 创建 Configuration 类的 MetaClass 对象。
     MetaClass metaConfig = MetaClass.forClass(Configuration.class, localReflectorFactory);
     for (Object key : props.keySet()) {
+      // 检测 Configuration 中是否有相关的属性，如果没有则抛出异常
       if (!metaConfig.hasSetter(String.valueOf(key))) {
         throw new BuilderException("The setting " + key + " is not known.  Make sure you spelled it correctly (case sensitive).");
       }

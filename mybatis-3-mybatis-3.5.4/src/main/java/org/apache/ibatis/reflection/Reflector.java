@@ -62,7 +62,11 @@ public class Reflector {
 
   public Reflector(Class<?> clazz) {
     type = clazz;
+
+    // 解析目标类（Configuration.class）的默认构造方法， 并赋值给 defaultConstructor 变量。
     addDefaultConstructor(clazz);
+
+    // 解析 getter 方法，并将解析结果放入 getMethods 中
     addGetMethods(clazz);
     addSetMethods(clazz);
     addFields(clazz);
