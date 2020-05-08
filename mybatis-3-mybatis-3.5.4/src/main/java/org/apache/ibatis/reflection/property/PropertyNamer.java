@@ -28,6 +28,12 @@ public final class PropertyNamer {
     // Prevent Instantiation of Static Class
   }
 
+  /**
+   * 将方法名转换为属性名字，方法名必须为 set\get\is 开头。
+   * getTitle -> Title
+   * setName -> Name
+   * isMale -> Male
+   */
   public static String methodToProperty(String name) {
     if (name.startsWith("is")) {
       name = name.substring(2);

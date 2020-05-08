@@ -139,7 +139,7 @@ public class MetaClass {
     // 分词器，解析属性名
     PropertyTokenizer prop = new PropertyTokenizer(name);
 
-    // hasNext 表示 name 是一个符合属性，有'.'
+    // hasNext 表示 name 是一个复合属性，有'.'
     if (prop.hasNext()) {
       if (reflector.hasSetter(prop.getName())) {
         MetaClass metaProp = metaClassForProperty(prop.getName());

@@ -106,6 +106,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       // 解析 properties 配置
       propertiesElement(root.evalNode("properties"));
 
+      // 解析 settings 配置
       Properties settings = settingsAsProperties(root.evalNode("settings"));
       loadCustomVfs(settings);
       loadCustomLogImpl(settings);

@@ -68,10 +68,20 @@ public class Reflector {
 
     // 解析 getter 方法，并将解析结果放入 getMethods 中
     addGetMethods(clazz);
+
+    // 解析 setter 方法，并将解析结果放入 setMethods 中
     addSetMethods(clazz);
+
+    // 解析属性字段，并将解析结果放入 getMethods 或者 setMethods 中
     addFields(clazz);
+
+    // 从 getMethods 中获取可读属性名的数组
     readablePropertyNames = getMethods.keySet().toArray(new String[0]);
+
+    // 从 setMethods 中获取可写属性名的数组
     writablePropertyNames = setMethods.keySet().toArray(new String[0]);
+
+    // 将所有属性名的大写作为key，属性名作为value，放入 caseInsensitivePropertyMap 中
     for (String propName : readablePropertyNames) {
       caseInsensitivePropertyMap.put(propName.toUpperCase(Locale.ENGLISH), propName);
     }
@@ -82,15 +92,34 @@ public class Reflector {
 
   private void addDefaultConstructor(Class<?> clazz) {
     Constructor<?>[] constructors = clazz.getDeclaredConstructors();
-    Arrays.stream(constructors).filter(constructor -> constructor.getParameterTypes().length == 0)
+    Arrays.stream(constructors)
+      // 过滤构造函数，满足没有入参
+      .filter(constructor -> constructor.getParameterTypes().length == 0)
+
+      // 如果有这样的构造函数，则赋值给 defaultConstructor
       .findAny().ifPresent(constructor -> this.defaultConstructor = constructor);
   }
 
   private void addGetMethods(Class<?> clazz) {
+    /*
+        新建一个容器，用于存储冲突的getter
+        getTitle 和 isTitle 两个方法经过 methodToProperty 处理，均得到 name = title，这会导致冲突。
+        这里先统一起存起来，后续再解决冲突
+     */
     Map<String, List<Method>> conflictingGetters = new HashMap<>();
+
+    // 获取当前类、接口以及父类中的方法。
     Method[] methods = getClassMethods(clazz);
-    Arrays.stream(methods).filter(m -> m.getParameterTypes().length == 0 && PropertyNamer.isGetter(m.getName()))
+
+
+    Arrays.stream(methods)
+      // 过滤获取的方法，满足无参且是 get 或者 is 开头的方法名。
+      .filter(m -> m.getParameterTypes().length == 0 && PropertyNamer.isGetter(m.getName()))
+
+      // 将方法名转换为对应的属性名，并加入到 conflictingGetters 中。
       .forEach(m -> addMethodConflict(conflictingGetters, PropertyNamer.methodToProperty(m.getName()), m));
+
+    // 解决冲突
     resolveGetterConflicts(conflictingGetters);
   }
 
@@ -104,6 +133,8 @@ public class Reflector {
           winner = candidate;
           continue;
         }
+
+        // 获取返回值的类型
         Class<?> winnerType = winner.getReturnType();
         Class<?> candidateType = candidate.getReturnType();
         if (candidateType.equals(winnerType)) {
@@ -111,11 +142,14 @@ public class Reflector {
             isAmbiguous = true;
             break;
           } else if (candidate.getName().startsWith("is")) {
+            // 两个方法的返回值类型一致，若两个方法返回值类型均为 boolean，则选取 isXXX 方法为 winner。
             winner = candidate;
           }
         } else if (candidateType.isAssignableFrom(winnerType)) {
+          // winnerType 是 candidateType 的子类，类型上更为具体，则认为当前的 winner 仍是合适的
           // OK getter type is descendant
         } else if (winnerType.isAssignableFrom(candidateType)) {
+          // candidateType 是 winnerType 的子类，此时认为 candidate 方法更为合适，故将 winner 更新为 candidate
           winner = candidate;
         } else {
           isAmbiguous = true;
@@ -138,15 +172,31 @@ public class Reflector {
   }
 
   private void addSetMethods(Class<?> clazz) {
+    /*
+       和 addGetMethods 一样，用于存储冲突的方法
+       这里产生冲突的原因是：可能出现重载的情况，如：
+       void setSex(int sex);
+       void setSex(SexEnum sex);
+     */
     Map<String, List<Method>> conflictingSetters = new HashMap<>();
+
+    // 获取当前类、接口以及父类中的方法。
     Method[] methods = getClassMethods(clazz);
-    Arrays.stream(methods).filter(m -> m.getParameterTypes().length == 1 && PropertyNamer.isSetter(m.getName()))
+
+    Arrays.stream(methods)
+      // 过滤所有的方法，满足方法只有一个参数，且以 set 开头
+      .filter(m -> m.getParameterTypes().length == 1 && PropertyNamer.isSetter(m.getName()))
+
+      // 将方法名转换为对应的属性名，并加入到 conflictingSetters 中。
       .forEach(m -> addMethodConflict(conflictingSetters, PropertyNamer.methodToProperty(m.getName()), m));
+
+    // 解决冲突
     resolveSetterConflicts(conflictingSetters);
   }
 
   private void addMethodConflict(Map<String, List<Method>> conflictingMethods, String name, Method method) {
     if (isValidPropertyName(name)) {
+      // 从 conflictingMethods 中获取方法的list，没有则新建
       List<Method> list = conflictingMethods.computeIfAbsent(name, k -> new ArrayList<>());
       list.add(method);
     }
@@ -155,12 +205,16 @@ public class Reflector {
   private void resolveSetterConflicts(Map<String, List<Method>> conflictingSetters) {
     for (String propName : conflictingSetters.keySet()) {
       List<Method> setters = conflictingSetters.get(propName);
+
+      // 获取属性对应的 getter 方法返回的类型。
+      // 因为 getter 方法不会出现重载的情况，可以用来反推哪个 setter 方法更加合适
       Class<?> getterType = getTypes.get(propName);
       boolean isGetterAmbiguous = getMethods.get(propName) instanceof AmbiguousMethodInvoker;
       boolean isSetterAmbiguous = false;
       Method match = null;
       for (Method setter : setters) {
         if (!isGetterAmbiguous && setter.getParameterTypes()[0].equals(getterType)) {
+          // 如果 setter 的参数类型与 getter 的返回类型一致，则认为最优
           // should be the best match
           match = setter;
           break;
@@ -182,11 +236,16 @@ public class Reflector {
     }
     Class<?> paramType1 = setter1.getParameterTypes()[0];
     Class<?> paramType2 = setter2.getParameterTypes()[0];
+
+    // 如果参数2是参数1的子类，则认为参数2对应的 setter 更加合适
     if (paramType1.isAssignableFrom(paramType2)) {
       return setter2;
+
+    // 如果参数1是参数2的子类， 则认为参数1对应的 setter 更加合适
     } else if (paramType2.isAssignableFrom(paramType1)) {
       return setter1;
     }
+
     MethodInvoker invoker = new AmbiguousMethodInvoker(setter1,
         MessageFormat.format(
             "Ambiguous setters defined for property ''{0}'' in class ''{1}'' with types ''{2}'' and ''{3}''.",
