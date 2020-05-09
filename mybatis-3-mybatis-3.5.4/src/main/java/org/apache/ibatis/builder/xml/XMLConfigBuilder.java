@@ -113,6 +113,7 @@ public class XMLConfigBuilder extends BaseBuilder {
 
       // 解析 typeAliases 配置
       typeAliasesElement(root.evalNode("typeAliases"));
+
       pluginElement(root.evalNode("plugins"));
       objectFactoryElement(root.evalNode("objectFactory"));
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
@@ -211,13 +212,26 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /*
+    <plugins>
+      <plugin interceptor="org.apache.ibatis.builder.ExamplePlugin">
+          <property name="key" value="value"/>
+      </plugin>
+    </plugins>
+   */
   private void pluginElement(XNode parent) throws Exception {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
         String interceptor = child.getStringAttribute("interceptor");
         Properties properties = child.getChildrenAsProperties();
+
+        // 解析拦截器的类型，并创建拦截器
         Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).getDeclaredConstructor().newInstance();
+
+        // 设置属性
         interceptorInstance.setProperties(properties);
+
+        // 添加拦截器到 configuration
         configuration.addInterceptor(interceptorInstance);
       }
     }
