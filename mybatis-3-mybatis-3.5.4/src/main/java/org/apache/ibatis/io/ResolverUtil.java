@@ -217,9 +217,12 @@ public class ResolverUtil<T> {
     String path = getPackagePath(packageName);
 
     try {
+      // 通过 VFS 获取 path 路径下面所有文件的路径名
+      // 筛选以 .class 结尾的文件名
       List<String> children = VFS.getInstance().list(path);
       for (String child : children) {
         if (child.endsWith(".class")) {
+          // 通过类加载器加载类名，并进行匹配。符合匹配规则的，加入到内部集合 matches 中
           addIfMatching(test, child);
         }
       }

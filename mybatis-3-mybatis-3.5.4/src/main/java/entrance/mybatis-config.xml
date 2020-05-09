@@ -25,6 +25,10 @@
 <!--    <typeAlias alias="Author" type="xyz.coolblog.model.AuthorDO"/>-->
 <!--  </typeAliases>-->
 
+  <typeAliases>
+    <package name="entrance.entity"/>
+  </typeAliases>
+
 <!--  <typeHandlers>-->
 <!--    <typeHandler handler="xyz.coolblog.mybatis.ArticleTypeHandler" javaType="xyz.coolblog.constant.ArticleTypeEnum"/>-->
 <!--  </typeHandlers>-->

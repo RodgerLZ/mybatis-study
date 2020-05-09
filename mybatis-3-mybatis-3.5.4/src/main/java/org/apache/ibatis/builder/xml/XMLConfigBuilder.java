@@ -110,6 +110,8 @@ public class XMLConfigBuilder extends BaseBuilder {
       Properties settings = settingsAsProperties(root.evalNode("settings"));
       loadCustomVfs(settings);
       loadCustomLogImpl(settings);
+
+      // 解析 typeAliases 配置
       typeAliasesElement(root.evalNode("typeAliases"));
       pluginElement(root.evalNode("plugins"));
       objectFactoryElement(root.evalNode("objectFactory"));
@@ -166,12 +168,31 @@ public class XMLConfigBuilder extends BaseBuilder {
     configuration.setLogImpl(logImpl);
   }
 
+  /*
+    通过 typeAliases 配置别名有两种方式
+      1、package    自动扫描包中的类型，并根据类型得到响应的别名。
+      2、typeAlias  明确某个类型配置别名
+
+
+    <typeAliases>
+      <package name="entrance.entity"/>
+    </typeAliases>
+
+
+    <typeAliases>
+      <typeAlias alias="tbItem" type="entrance.entity.TbItem" />
+      <typeAlias type="entrance.entity.Other" />
+    </typeAliases>
+   */
   private void typeAliasesElement(XNode parent) {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
+        // 通过 package 的方式
         if ("package".equals(child.getName())) {
           String typeAliasPackage = child.getStringAttribute("name");
           configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);
+
+        // 通过 typeAliases 的方式
         } else {
           String alias = child.getStringAttribute("alias");
           String type = child.getStringAttribute("type");

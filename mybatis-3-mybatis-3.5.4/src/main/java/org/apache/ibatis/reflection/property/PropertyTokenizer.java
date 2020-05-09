@@ -28,7 +28,7 @@ public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
 
   public PropertyTokenizer(String fullname) {
 
-    // 如果 fullname 中有 . ，前面的为name,后面的为children
+    // 如果 fullname 中有 . ，前面的为name,后面的为children  (name.children)
     int delim = fullname.indexOf('.');
     if (delim > -1) {
       name = fullname.substring(0, delim);
@@ -39,7 +39,7 @@ public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
     }
     indexedName = name;
 
-    // 如果name中含有'['，则继续分割为 index 和 name
+    // 如果name中含有'['，则继续分割为 name 和 index  (name[index)
     delim = name.indexOf('[');
     if (delim > -1) {
       index = name.substring(delim + 1, name.length() - 1);
