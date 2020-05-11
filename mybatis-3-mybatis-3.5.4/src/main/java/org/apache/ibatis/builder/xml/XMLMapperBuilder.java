@@ -90,9 +90,15 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   public void parse() {
+    // 检测当前映射文件是否已经被
     if (!configuration.isResourceLoaded(resource)) {
+
+      // 解析 mapper 节点
       configurationElement(parser.evalNode("/mapper"));
+
+      // 将 resource 加入到 loadedResources中，标志该 resource 已经解析过
       configuration.addLoadedResource(resource);
+
       bindMapperForNamespace();
     }
 
@@ -107,12 +113,19 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   private void configurationElement(XNode context) {
     try {
+      // 获取 mapper 的命名空间（dao）
       String namespace = context.getStringAttribute("namespace");
       if (namespace == null || namespace.equals("")) {
         throw new BuilderException("Mapper's namespace cannot be empty");
       }
+
+      // 设置 currentNamespace
       builderAssistant.setCurrentNamespace(namespace);
+
+      // 解析 cache-ref 节点
       cacheRefElement(context.evalNode("cache-ref"));
+
+      // 解析 cache 节点
       cacheElement(context.evalNode("cache"));
       parameterMapElement(context.evalNodes("/mapper/parameterMap"));
       resultMapElements(context.evalNodes("/mapper/resultMap"));
@@ -200,15 +213,22 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   private void cacheElement(XNode context) {
     if (context != null) {
+      // 解析节点各个属性
       String type = context.getStringAttribute("type", "PERPETUAL");
       Class<? extends Cache> typeClass = typeAliasRegistry.resolveAlias(type);
+
       String eviction = context.getStringAttribute("eviction", "LRU");
       Class<? extends Cache> evictionClass = typeAliasRegistry.resolveAlias(eviction);
+
       Long flushInterval = context.getLongAttribute("flushInterval");
       Integer size = context.getIntAttribute("size");
       boolean readWrite = !context.getBooleanAttribute("readOnly", false);
       boolean blocking = context.getBooleanAttribute("blocking", false);
+
+      // 获取子节点配置
       Properties props = context.getChildrenAsProperties();
+
+      // 构建缓存对象
       builderAssistant.useNewCache(typeClass, evictionClass, flushInterval, size, readWrite, blocking, props);
     }
   }

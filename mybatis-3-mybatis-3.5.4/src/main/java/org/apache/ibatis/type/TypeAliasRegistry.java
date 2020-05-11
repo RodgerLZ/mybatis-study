@@ -102,6 +102,10 @@ public class TypeAliasRegistry {
 
   @SuppressWarnings("unchecked")
   // throws class cast exception as well if types cannot be assigned
+  /*
+    首先从 typeAliases 映射器中查找，如果存在则直接返回
+    如果不存在，则使用发射机制获取 class 并返回
+   */
   public <T> Class<T> resolveAlias(String string) {
     try {
       if (string == null) {

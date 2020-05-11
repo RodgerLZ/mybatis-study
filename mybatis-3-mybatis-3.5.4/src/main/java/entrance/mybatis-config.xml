@@ -29,9 +29,20 @@
     <package name="entrance.entity"/>
   </typeAliases>
 
-<!--  <typeHandlers>-->
-<!--    <typeHandler handler="xyz.coolblog.mybatis.ArticleTypeHandler" javaType="xyz.coolblog.constant.ArticleTypeEnum"/>-->
-<!--  </typeHandlers>-->
+  <!-- 配置 typeHandlers
+
+  自动扫描
+  <typeHandlers>
+    <package name="com.lzxmp.handlers"/>
+  </typeHandlers>
+
+  手动配置
+  <typeHandlers>
+    <typeHandler jdbcType="TINYINT"
+                 javaType="com.lzxmp.constant.ArticleTypeEnum"
+                 handler="com.lzxmp.mybatis.ArticleTypeHandler"/>
+  </typeHandlers>
+  -->
 
   <environments default="development">
     <environment id="development">

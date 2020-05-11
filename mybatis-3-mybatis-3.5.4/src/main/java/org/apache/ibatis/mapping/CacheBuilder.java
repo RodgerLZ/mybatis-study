@@ -90,7 +90,11 @@ public class CacheBuilder {
   }
 
   public Cache build() {
+
+    // 设置默认的缓存类型 以及 缓存策略
     setDefaultImplementations();
+
+
     Cache cache = newBaseCacheInstance(implementation, id);
     setCacheProperties(cache);
     // issue #352, do not apply decorators to custom caches
