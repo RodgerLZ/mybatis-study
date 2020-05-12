@@ -127,8 +127,13 @@ public class XMLMapperBuilder extends BaseBuilder {
 
       // 解析 cache 节点
       cacheElement(context.evalNode("cache"));
+
       parameterMapElement(context.evalNodes("/mapper/parameterMap"));
+
+      // 解析 resultMap 节点
       resultMapElements(context.evalNodes("/mapper/resultMap"));
+
+
       sqlElement(context.evalNodes("/mapper/sql"));
       buildStatementFromContext(context.evalNodes("select|insert|update|delete"));
     } catch (Exception e) {
@@ -202,10 +207,16 @@ public class XMLMapperBuilder extends BaseBuilder {
   private void cacheRefElement(XNode context) {
     if (context != null) {
       configuration.addCacheRef(builderAssistant.getCurrentNamespace(), context.getStringAttribute("namespace"));
+
+      // 创建 CacheRefResolver 实例
       CacheRefResolver cacheRefResolver = new CacheRefResolver(builderAssistant, context.getStringAttribute("namespace"));
       try {
         cacheRefResolver.resolveCacheRef();
       } catch (IncompleteElementException e) {
+        /*
+          捕捉 IncompleteElementException 异常
+          并将 cacheRefResolver 存入到 incompleteCacheRefs 中。
+         */
         configuration.addIncompleteCacheRef(cacheRefResolver);
       }
     }
@@ -260,8 +271,11 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   private void resultMapElements(List<XNode> list) {
+    // 遍历所有的 resultMap
     for (XNode resultMapNode : list) {
       try {
+
+        // 解析 resultMap 节点
         resultMapElement(resultMapNode);
       } catch (IncompleteElementException e) {
         // ignore, it will be retried
@@ -270,21 +284,31 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   private ResultMap resultMapElement(XNode resultMapNode) {
+
+    // 调用重载方法
     return resultMapElement(resultMapNode, Collections.emptyList(), null);
   }
 
   private ResultMap resultMapElement(XNode resultMapNode, List<ResultMapping> additionalResultMappings, Class<?> enclosingType) {
     ErrorContext.instance().activity("processing " + resultMapNode.getValueBasedIdentifier());
+
+    // 获取 type 属性
     String type = resultMapNode.getStringAttribute("type",
         resultMapNode.getStringAttribute("ofType",
             resultMapNode.getStringAttribute("resultType",
                 resultMapNode.getStringAttribute("javaType"))));
+
+    // 解析 type 对应的类型
     Class<?> typeClass = resolveClass(type);
     if (typeClass == null) {
       typeClass = inheritEnclosingType(resultMapNode, enclosingType);
     }
+
+
     Discriminator discriminator = null;
     List<ResultMapping> resultMappings = new ArrayList<>(additionalResultMappings);
+
+    // 获取并遍历 resultMap 的子节点列表
     List<XNode> resultChildren = resultMapNode.getChildren();
     for (XNode resultChild : resultChildren) {
       if ("constructor".equals(resultChild.getName())) {
@@ -292,6 +316,7 @@ public class XMLMapperBuilder extends BaseBuilder {
       } else if ("discriminator".equals(resultChild.getName())) {
         discriminator = processDiscriminatorElement(resultChild, typeClass, resultMappings);
       } else {
+        // 解析 id 和 result 节点
         List<ResultFlag> flags = new ArrayList<>();
         if ("id".equals(resultChild.getName())) {
           flags.add(ResultFlag.ID);

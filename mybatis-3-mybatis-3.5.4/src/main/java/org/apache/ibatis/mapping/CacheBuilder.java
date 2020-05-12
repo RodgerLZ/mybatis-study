@@ -94,17 +94,22 @@ public class CacheBuilder {
     // 设置默认的缓存类型 以及 缓存策略
     setDefaultImplementations();
 
-
     Cache cache = newBaseCacheInstance(implementation, id);
     setCacheProperties(cache);
+
     // issue #352, do not apply decorators to custom caches
+    // 对内置缓存 PerpetualCache 应用装饰器
     if (PerpetualCache.class.equals(cache.getClass())) {
       for (Class<? extends Cache> decorator : decorators) {
         cache = newCacheDecoratorInstance(decorator, cache);
         setCacheProperties(cache);
       }
+
+      // 应用具有日志功能的缓存装饰器
       cache = setStandardDecorators(cache);
+
     } else if (!LoggingCache.class.isAssignableFrom(cache.getClass())) {
+      // 应用具有日志功能的缓存装饰器
       cache = new LoggingCache(cache);
     }
     return cache;
@@ -126,12 +131,18 @@ public class CacheBuilder {
         metaCache.setValue("size", size);
       }
       if (clearInterval != null) {
+        // clearInterval 不为空，应用 ScheduledCache 装饰器
         cache = new ScheduledCache(cache);
         ((ScheduledCache) cache).setClearInterval(clearInterval);
       }
       if (readWrite) {
         cache = new SerializedCache(cache);
       }
+
+      /*
+        应用 LoggingCache，SynchronizedCache 装饰器
+        使原缓存具备打印日志和线程同步的能力
+       */
       cache = new LoggingCache(cache);
       cache = new SynchronizedCache(cache);
       if (blocking) {
@@ -180,6 +191,8 @@ public class CacheBuilder {
         }
       }
     }
+
+    // 如果缓存类实现了 InitializingObject 接口，则调用 initialize 方法初始化逻辑。
     if (InitializingObject.class.isAssignableFrom(cache.getClass())) {
       try {
         ((InitializingObject) cache).initialize();
