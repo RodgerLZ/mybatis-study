@@ -89,6 +89,11 @@ public class XMLMapperBuilder extends BaseBuilder {
     this.resource = resource;
   }
 
+  /*
+   * 1、解析 mapper 节点
+   * 2、通过命名空间绑定 Mapper 接口
+   * 3、处理未完成解析的节点
+   */
   public void parse() {
     // 检测当前映射文件是否已经被
     if (!configuration.isResourceLoaded(resource)) {
@@ -99,9 +104,11 @@ public class XMLMapperBuilder extends BaseBuilder {
       // 将 resource 加入到 loadedResources中，标志该 resource 已经解析过
       configuration.addLoadedResource(resource);
 
+      // todo 通过命名空间绑定 Mapper 接口
       bindMapperForNamespace();
     }
 
+    // todo 处理未完成解析的节点
     parsePendingResultMaps();
     parsePendingCacheRefs();
     parsePendingStatements();
@@ -283,6 +290,12 @@ public class XMLMapperBuilder extends BaseBuilder {
     }
   }
 
+  /*
+   * 获取 <resultMap> 节点的各种属性
+   * 遍历 <resultMap> 的子节点，并根据子节点名称执行相应的解析逻辑
+   * 构建 ResultMap 对象
+   * 若构建过程中发生异常，则将 resultMapResolver 添加到 incompleteResultMaps 集合中
+   */
   private ResultMap resultMapElement(XNode resultMapNode) {
 
     // 调用重载方法
@@ -298,7 +311,7 @@ public class XMLMapperBuilder extends BaseBuilder {
             resultMapNode.getStringAttribute("resultType",
                 resultMapNode.getStringAttribute("javaType"))));
 
-    // 解析 type 对应的类型
+    // 解析 type 对应的类型，赋值给 typeClass
     Class<?> typeClass = resolveClass(type);
     if (typeClass == null) {
       typeClass = inheritEnclosingType(resultMapNode, enclosingType);
@@ -312,6 +325,10 @@ public class XMLMapperBuilder extends BaseBuilder {
     List<XNode> resultChildren = resultMapNode.getChildren();
     for (XNode resultChild : resultChildren) {
       if ("constructor".equals(resultChild.getName())) {
+        /*
+         * 如果想使用不可变类存储查询结果，构造方法用于初始化成员变量。
+         * 对于这种不可变的 Java 类，需要通过带有参数的构造方法进行初始化
+         */
         processConstructorElement(resultChild, typeClass, resultMappings);
       } else if ("discriminator".equals(resultChild.getName())) {
         discriminator = processDiscriminatorElement(resultChild, typeClass, resultMappings);
@@ -324,12 +341,17 @@ public class XMLMapperBuilder extends BaseBuilder {
         resultMappings.add(buildResultMappingFromContext(resultChild, typeClass, flags));
       }
     }
+
+    // 获取 id/extends/autoMapping
     String id = resultMapNode.getStringAttribute("id",
             resultMapNode.getValueBasedIdentifier());
     String extend = resultMapNode.getStringAttribute("extends");
     Boolean autoMapping = resultMapNode.getBooleanAttribute("autoMapping");
+
+    // 创建 resultMap 解析器
     ResultMapResolver resultMapResolver = new ResultMapResolver(builderAssistant, id, typeClass, extend, discriminator, resultMappings, autoMapping);
     try {
+      // 根据之前获取的信息构建 ResultMap 对象
       return resultMapResolver.resolve();
     } catch (IncompleteElementException  e) {
       configuration.addIncompleteResultMap(resultMapResolver);
@@ -419,21 +441,32 @@ public class XMLMapperBuilder extends BaseBuilder {
     } else {
       property = context.getStringAttribute("property");
     }
+
     String column = context.getStringAttribute("column");
     String javaType = context.getStringAttribute("javaType");
     String jdbcType = context.getStringAttribute("jdbcType");
     String nestedSelect = context.getStringAttribute("select");
+
+    /*
+     * 解析 resultMap 属性，该属性出现在 <association> 和 <collection> 节点中。
+     * 若这两个节点不包含 resultMap 属性，则调用 processNestedResultMappings 方法
+     * 解析嵌套 resultMap。
+     */
     String nestedResultMap = context.getStringAttribute("resultMap", () ->
       processNestedResultMappings(context, Collections.emptyList(), resultType));
+
     String notNullColumn = context.getStringAttribute("notNullColumn");
     String columnPrefix = context.getStringAttribute("columnPrefix");
     String typeHandler = context.getStringAttribute("typeHandler");
     String resultSet = context.getStringAttribute("resultSet");
     String foreignColumn = context.getStringAttribute("foreignColumn");
     boolean lazy = "lazy".equals(context.getStringAttribute("fetchType", configuration.isLazyLoadingEnabled() ? "lazy" : "eager"));
+
     Class<?> javaTypeClass = resolveClass(javaType);
     Class<? extends TypeHandler<?>> typeHandlerClass = resolveClass(typeHandler);
     JdbcType jdbcTypeEnum = resolveJdbcType(jdbcType);
+
+    // 构建 ResultMapping 对象
     return builderAssistant.buildResultMapping(resultType, property, column, javaTypeClass, jdbcTypeEnum, nestedSelect, nestedResultMap, notNullColumn, columnPrefix, typeHandlerClass, flags, resultSet, foreignColumn, lazy);
   }
 
@@ -444,6 +477,7 @@ public class XMLMapperBuilder extends BaseBuilder {
       if (context.getStringAttribute("select") == null) {
         validateCollection(context, enclosingType);
         ResultMap resultMap = resultMapElement(context, resultMappings, enclosingType);
+        // 返回 ResultMap 的 id
         return resultMap.getId();
       }
     }

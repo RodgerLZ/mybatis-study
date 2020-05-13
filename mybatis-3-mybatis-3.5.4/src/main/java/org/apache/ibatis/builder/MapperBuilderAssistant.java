@@ -196,6 +196,8 @@ public class MapperBuilderAssistant extends BaseBuilder {
       Discriminator discriminator,
       List<ResultMapping> resultMappings,
       Boolean autoMapping) {
+
+    // 为 ResultMap 的 id 和 extend 属性值拼接命名空间
     id = applyCurrentNamespace(id, false);
     extend = applyCurrentNamespace(extend, true);
 
@@ -219,6 +221,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
       }
       resultMappings.addAll(extendedResultMappings);
     }
+
     ResultMap resultMap = new ResultMap.Builder(configuration, id, type, resultMappings, autoMapping)
         .discriminator(discriminator)
         .build();
@@ -384,14 +387,25 @@ public class MapperBuilderAssistant extends BaseBuilder {
       String resultSet,
       String foreignColumn,
       boolean lazy) {
+
+    // 如果 javaType 为空，这里根据 property 的属性进行解析
     Class<?> javaTypeClass = resolveResultJavaType(resultType, property, javaType);
+
+    // 解析 typeHandler
     TypeHandler<?> typeHandlerInstance = resolveTypeHandler(javaTypeClass, typeHandler);
+
+    /*
+     * 解析 column = {property1=column1, property2=column2} 的情况，
+     * 这里会将 column 拆分成多个 ResultMapping
+     */
     List<ResultMapping> composites;
     if ((nestedSelect == null || nestedSelect.isEmpty()) && (foreignColumn == null || foreignColumn.isEmpty())) {
       composites = Collections.emptyList();
     } else {
       composites = parseCompositeColumnName(column);
     }
+
+    // 通过构造模式构建 ResultMapping
     return new ResultMapping.Builder(configuration, property, column, javaTypeClass)
         .jdbcType(jdbcType)
         .nestedQueryId(applyCurrentNamespace(nestedSelect, true))
