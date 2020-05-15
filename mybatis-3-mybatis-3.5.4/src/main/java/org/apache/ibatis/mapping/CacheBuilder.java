@@ -95,6 +95,7 @@ public class CacheBuilder {
     setDefaultImplementations();
 
     Cache cache = newBaseCacheInstance(implementation, id);
+    // 对于使用第三方缓存时，配置属性
     setCacheProperties(cache);
 
     // issue #352, do not apply decorators to custom caches
@@ -161,7 +162,12 @@ public class CacheBuilder {
         String name = (String) entry.getKey();
         String value = (String) entry.getValue();
         if (metaCache.hasSetter(name)) {
+
+          // 获取 setter 方法的参数类型
           Class<?> type = metaCache.getSetterType(name);
+
+          // 更具 setter 方法的参数类型进行转换
+          // 并将转换后的值通过 setter 方法复制
           if (String.class == type) {
             metaCache.setValue(name, value);
           } else if (int.class == type

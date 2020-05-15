@@ -10,6 +10,12 @@
     readOnly="true"/>
     -->
 
+  <!--
+  <sql id="table">
+      tb_item
+  </sql>
+  -->
+
   <resultMap id="BaseResultMap" type="entrance.entity.TbItem">
     <id column="id" jdbcType="BIGINT" property="id" />
     <result column="title" jdbcType="VARCHAR" property="title" />
@@ -23,6 +29,8 @@
     <result column="created" jdbcType="TIMESTAMP" property="created" />
     <result column="updated" jdbcType="TIMESTAMP" property="updated" />
   </resultMap>
+
+
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
     delete from tb_item
     where id = #{id,jdbcType=BIGINT}

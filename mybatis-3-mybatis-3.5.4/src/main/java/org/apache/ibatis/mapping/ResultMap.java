@@ -79,6 +79,14 @@ public class ResultMap {
       return resultMap.type;
     }
 
+    /*
+     * 主要做的事情就是将 ResultMapping 实例及属性分别存储到不同的集合中，仅此而已。
+     * mappedColumns	用于存储 <id>、<result>、<idArg>、<arg> 节点 column 属性
+     * mappedProperties	用于存储 <id> 和 <result> 节点的 property 属性，或 <idArgs> 和 <arg> 节点的 name 属性
+     * idResultMappings	用于存储 <id> 和 <idArg> 节点对应的 ResultMapping 对象
+     * propertyResultMappings	用于存储 <id> 和 <result> 节点对应的 ResultMapping 对象
+     * constructorResultMappings	用于存储 <idArgs> 和 <arg> 节点对应的 ResultMapping 对象
+     */
     public ResultMap build() {
       if (resultMap.id == null) {
         throw new IllegalArgumentException("ResultMaps must have an id");

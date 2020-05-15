@@ -140,8 +140,10 @@ public class XMLMapperBuilder extends BaseBuilder {
       // 解析 resultMap 节点
       resultMapElements(context.evalNodes("/mapper/resultMap"));
 
-
+      // 解析 sql 节点
       sqlElement(context.evalNodes("/mapper/sql"));
+
+      // 解析 select|insert|update|delete 等节点
       buildStatementFromContext(context.evalNodes("select|insert|update|delete"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing Mapper XML. The XML location is '" + resource + "'. Cause: " + e, e);
@@ -157,8 +159,11 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   private void buildStatementFromContext(List<XNode> list, String requiredDatabaseId) {
     for (XNode context : list) {
+      // 创建 XMLStatementBuilder
       final XMLStatementBuilder statementParser = new XMLStatementBuilder(configuration, builderAssistant, context, requiredDatabaseId);
       try {
+        // 解析 Statement 节点，并将解析结果存储到
+        // configuration 的 mappedStatements 集合中
         statementParser.parseStatementNode();
       } catch (IncompleteElementException e) {
         configuration.addIncompleteStatement(statementParser);
@@ -317,7 +322,6 @@ public class XMLMapperBuilder extends BaseBuilder {
       typeClass = inheritEnclosingType(resultMapNode, enclosingType);
     }
 
-
     Discriminator discriminator = null;
     List<ResultMapping> resultMappings = new ArrayList<>(additionalResultMappings);
 
@@ -410,9 +414,14 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   private void sqlElement(List<XNode> list, String requiredDatabaseId) {
     for (XNode context : list) {
+      // 获取 id 和 databaseId 属性
       String databaseId = context.getStringAttribute("databaseId");
       String id = context.getStringAttribute("id");
+
+      // id = currentNamespace + '.' + id
       id = builderAssistant.applyCurrentNamespace(id, false);
+
+      // 校验 databaseId 与 requiredDatabaseId 是否一致
       if (databaseIdMatchesCurrent(id, databaseId, requiredDatabaseId)) {
         sqlFragments.put(id, context);
       }

@@ -198,6 +198,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
       Boolean autoMapping) {
 
     // 为 ResultMap 的 id 和 extend 属性值拼接命名空间
+    // id = namespace + '.' + id
     id = applyCurrentNamespace(id, false);
     extend = applyCurrentNamespace(extend, true);
 
